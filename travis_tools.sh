@@ -133,7 +133,10 @@ function pyinst_ext_for_version {
     check_var $py_version
     local py_0=${py_version:0:1}
     if [ $py_0 -eq 2 ]; then
-        if [ -n "$(pyver_ge $py_version 2.7.9)" ]; then
+        local py_maj_min=${py_version:0:3}
+        if [ $py_maj_min = "2.6" ]; then
+            echo "dmg"
+        elif [ -n "$(pyver_ge $py_version 2.7.9)" ]; then
             echo "pkg"
         else
             echo "dmg"
@@ -147,6 +150,17 @@ function pyinst_ext_for_version {
     fi
 }
 
+function pyinst_osx_ver_for_version {
+    # echo macosx10.3 for python 2.6 and macosx10.6 for 2.7 and above
+    local py_version=$1
+    local py_maj_min=${py_version:0:3}
+
+    if [ $py_maj_min = "2.6" ]; then
+        echo "macosx10.3"
+    else
+        echo "macosx10.6"
+    fi
+}
 
 function get_pip_sudo {
     # Echo "sudo" if PIP_CMD starts with sudo
@@ -166,7 +180,8 @@ function install_macpython {
     local py_version=$1
     check_var $py_version
     local inst_ext=$(pyinst_ext_for_version $py_version)
-    local py_inst=python-$py_version-macosx10.6.$inst_ext
+    local inst_osx_ver=$(pyinst_osx_ver_for_version $py_version)
+    local py_inst=python-$py_version-${inst_osx_ver}.$inst_ext
     local inst_path=$DOWNLOADS_SDIR/$py_inst
     mkdir -p $DOWNLOADS_SDIR
     curl $MACPYTHON_URL/$py_version/${py_inst} > $inst_path
